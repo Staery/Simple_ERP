@@ -1,0 +1,401 @@
+<UserControl x:Class="SimpleErp.Views.ProjectsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:SimpleErp.Core.ViewModels;assembly=SimpleErp.Core"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:ProjectsViewModel}"
+             d:DesignHeight="760"
+             d:DesignWidth="1140">
+
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="370" />
+      <ColumnDefinition Width="*" />
+    </Grid.ColumnDefinitions>
+
+    <!-- ============================== List ============================== -->
+    <Border Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,0,1,0">
+      <DockPanel>
+        <StackPanel Margin="16,18,16,12" DockPanel.Dock="Top">
+          <DockPanel Margin="0,0,0,12">
+            <Button Command="{Binding NewCommand}"
+                    DockPanel.Dock="Right"
+                    Style="{StaticResource PrimaryButton}"
+                    ToolTip="Add a project (Ctrl+N)">
+              <StackPanel Orientation="Horizontal">
+                <Path Margin="0,0,6,0" Data="{StaticResource Icon.Add}" Style="{StaticResource Icon}" />
+                <TextBlock Text="New" />
+              </StackPanel>
+            </Button>
+            <TextBlock VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource SecondaryTextBrush}" Text="{Binding ResultsText}" />
+          </DockPanel>
+
+          <Grid Margin="0,0,0,10">
+            <TextBox Padding="34,8,10,8"
+                     Style="{StaticResource InputBox}"
+                     Tag="Search project or client…"
+                     Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=150}" />
+            <Path Margin="11,0,0,0"
+                  HorizontalAlignment="Left"
+                  Data="{StaticResource Icon.Search}"
+                  Fill="{StaticResource MutedTextBrush}"
+                  IsHitTestVisible="False"
+                  Style="{StaticResource Icon}" />
+          </Grid>
+
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="8" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <ComboBox DisplayMemberPath="Label"
+                      ItemsSource="{Binding StatusFilters}"
+                      SelectedItem="{Binding SelectedStatusFilter}"
+                      Style="{StaticResource FieldCombo}"
+                      ToolTip="Filter by status" />
+            <ComboBox Grid.Column="2"
+                      DisplayMemberPath="Label"
+                      ItemsSource="{Binding SortOptions}"
+                      SelectedItem="{Binding SelectedSort}"
+                      Style="{StaticResource FieldCombo}"
+                      ToolTip="Sort order" />
+          </Grid>
+        </StackPanel>
+
+        <Grid>
+          <ListBox ItemContainerStyle="{StaticResource CardItem}"
+                   ItemsSource="{Binding Items}"
+                   SelectedItem="{Binding SelectedItem}"
+                   Style="{StaticResource CardList}">
+            <ListBox.ItemTemplate>
+              <DataTemplate DataType="{x:Type vm:ProjectListItem}">
+                <StackPanel>
+                  <DockPanel>
+                    <Border Margin="8,0,0,0"
+                            Background="{Binding Status, Converter={StaticResource Palette}, ConverterParameter=Soft}"
+                            DockPanel.Dock="Right"
+                            Style="{StaticResource Pill}"
+                            VerticalAlignment="Top">
+                      <TextBlock Foreground="{Binding Status, Converter={StaticResource Palette}}" Style="{StaticResource PillText}" Text="{Binding StatusName}" />
+                    </Border>
+                    <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                  </DockPanel>
+                  <TextBlock Margin="0,1,0,10" Style="{StaticResource MutedText}" Text="{Binding Client}" />
+
+                  <DockPanel Margin="0,0,0,10">
+                    <TextBlock Width="36"
+                               DockPanel.Dock="Right"
+                               FontSize="12"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource TextBrush}"
+                               Text="{Binding Progress, StringFormat={}{0}%}"
+                               TextAlignment="Right" />
+                    <ProgressBar VerticalAlignment="Center" Maximum="100" Style="{StaticResource ProgressMeter}" Value="{Binding Progress, Mode=OneWay}" />
+                  </DockPanel>
+
+                  <DockPanel>
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                      <Border Background="{Binding Insight.Health, Converter={StaticResource Palette}, ConverterParameter=Soft}" Style="{StaticResource Pill}">
+                        <TextBlock Foreground="{Binding Insight.Health, Converter={StaticResource Palette}}" Style="{StaticResource PillText}" Text="{Binding Insight.HealthText}" />
+                      </Border>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                      <ItemsControl ItemsSource="{Binding Team}">
+                        <ItemsControl.ItemsPanel>
+                          <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" />
+                          </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate DataType="{x:Type vm:TeamAvatar}">
+                            <Border Width="28"
+                                    Height="28"
+                                    Margin="0,0,-6,0"
+                                    Background="{Binding AvatarIndex, Converter={StaticResource Palette}}"
+                                    BorderBrush="White"
+                                    BorderThickness="2"
+                                    CornerRadius="14"
+                                    ToolTip="{Binding FullName}">
+                              <TextBlock FontSize="9" Style="{StaticResource AvatarText}" Text="{Binding Initials}" />
+                            </Border>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                      <Border Width="28"
+                              Height="28"
+                              Background="{StaticResource DividerBrush}"
+                              BorderBrush="White"
+                              BorderThickness="2"
+                              CornerRadius="14"
+                              Visibility="{Binding HasHiddenTeam, Converter={StaticResource VisibleWhen}}">
+                        <TextBlock FontSize="9" FontWeight="SemiBold" Foreground="{StaticResource SecondaryTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" Text="{Binding HiddenTeamCount, StringFormat=+{0}}" />
+                      </Border>
+                      <TextBlock Margin="14,0,0,0" VerticalAlignment="Center" Style="{StaticResource MutedText}" Text="{Binding Insight.DaysLeftText}" />
+                    </StackPanel>
+                  </DockPanel>
+                </StackPanel>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+
+          <StackPanel Margin="24,48,24,0"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Top"
+                      Visibility="{Binding IsListEmpty, Converter={StaticResource VisibleWhen}}">
+            <Path HorizontalAlignment="Center" Data="{StaticResource Icon.Search}" Fill="{StaticResource BorderStrongBrush}" Style="{StaticResource LargeIcon}" />
+            <TextBlock Margin="0,12,0,4" HorizontalAlignment="Center" FontWeight="SemiBold" Foreground="{StaticResource SecondaryTextBrush}" Text="No projects found" />
+            <TextBlock HorizontalAlignment="Center" Style="{StaticResource MutedText}" Text="Try another search or filter." />
+          </StackPanel>
+        </Grid>
+      </DockPanel>
+    </Border>
+
+    <!-- ============================== Editor ============================== -->
+    <Grid Grid.Column="1">
+
+      <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding HasEditor, Converter={StaticResource CollapsedWhen}}">
+        <Border Width="72" Height="72" HorizontalAlignment="Center" Background="{StaticResource AccentSoftBrush}" CornerRadius="20">
+          <Path HorizontalAlignment="Center" Data="{StaticResource Icon.Briefcase}" Fill="{StaticResource AccentBrush}" Style="{StaticResource LargeIcon}" />
+        </Border>
+        <TextBlock Margin="0,18,0,6" HorizontalAlignment="Center" Style="{StaticResource PageTitle}" Text="Select a project" />
+        <TextBlock Margin="0,0,0,18" HorizontalAlignment="Center" Style="{StaticResource MutedText}" Text="Or start a new one and assign a team." />
+        <Button HorizontalAlignment="Center" Command="{Binding NewCommand}" Content="New project" Style="{StaticResource PrimaryButton}" />
+      </StackPanel>
+
+      <DockPanel Visibility="{Binding HasEditor, Converter={StaticResource VisibleWhen}}">
+
+        <!-- Toolbar -->
+        <Border Padding="24,14"
+                Background="{StaticResource CardBrush}"
+                BorderBrush="{StaticResource DividerBrush}"
+                BorderThickness="0,0,0,1"
+                DockPanel.Dock="Top">
+          <DockPanel>
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+              <Button Margin="0,0,16,0" Command="{Binding DeleteCommand}" Style="{StaticResource DangerButton}" ToolTip="Delete project">
+                <Path Data="{StaticResource Icon.Delete}" Style="{StaticResource Icon}" />
+              </Button>
+              <Button Margin="0,0,8,0" Command="{Binding RevertCommand}" Style="{StaticResource SecondaryButton}" ToolTip="Discard unsaved changes">
+                <StackPanel Orientation="Horizontal">
+                  <Path Margin="0,0,6,0" Data="{StaticResource Icon.Undo}" Style="{StaticResource Icon}" />
+                  <TextBlock Text="Discard" />
+                </StackPanel>
+              </Button>
+              <Button Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButton}" ToolTip="Save (Ctrl+S)">
+                <StackPanel Orientation="Horizontal">
+                  <Path Margin="0,0,8,0" Data="{StaticResource Icon.Save}" Style="{StaticResource Icon}" />
+                  <TextBlock Text="Save" />
+                </StackPanel>
+              </Button>
+            </StackPanel>
+
+            <StackPanel DataContext="{Binding Editor}" Orientation="Horizontal">
+              <Border Width="48" Height="48" Background="{StaticResource AccentGradientBrush}" CornerRadius="12">
+                <Path Data="{StaticResource Icon.Briefcase}" Fill="White" Style="{StaticResource Icon}" />
+              </Border>
+              <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                <TextBlock FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Text="{Binding DisplayName}" />
+                <StackPanel Orientation="Horizontal">
+                  <TextBlock Style="{StaticResource MutedText}" Text="{Binding Client}" />
+                  <StackPanel Margin="12,0,0,0" Orientation="Horizontal" Visibility="{Binding IsDirty, Converter={StaticResource VisibleWhen}}">
+                    <Ellipse Width="8" Height="8" Margin="0,0,6,0" Fill="{StaticResource WarningBrush}" />
+                    <TextBlock Style="{StaticResource MutedText}" Text="Unsaved changes" />
+                  </StackPanel>
+                </StackPanel>
+              </StackPanel>
+            </StackPanel>
+          </DockPanel>
+        </Border>
+
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+          <StackPanel Margin="24,18,24,24" DataContext="{Binding Editor}">
+
+            <Border Margin="0,0,0,16"
+                    Padding="12,8"
+                    Background="{StaticResource DangerSoftBrush}"
+                    BorderBrush="{StaticResource DangerBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Visibility="{Binding ErrorSummary, Converter={StaticResource VisibleWhen}}">
+              <StackPanel Orientation="Horizontal">
+                <Path Margin="0,0,8,0" Data="{StaticResource Icon.Error}" Fill="{StaticResource DangerBrush}" Style="{StaticResource Icon}" />
+                <TextBlock VerticalAlignment="Center" FontSize="12.5" Foreground="{StaticResource DangerBrush}" Text="{Binding ErrorSummary}" TextWrapping="Wrap" />
+              </StackPanel>
+            </Border>
+
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1.25*" />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+
+              <!-- Details -->
+              <Border VerticalAlignment="Top" Style="{StaticResource Card}">
+                <StackPanel>
+                  <TextBlock Style="{StaticResource SectionTitle}" Text="Details" />
+                  <Grid>
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="12" />
+                      <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Style="{StaticResource Field}">
+                      <TextBlock Style="{StaticResource FieldLabel}" Text="PROJECT NAME" />
+                      <TextBox Style="{StaticResource InputBox}" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Style="{StaticResource Field}">
+                      <TextBlock Style="{StaticResource FieldLabel}" Text="CLIENT" />
+                      <TextBox Style="{StaticResource InputBox}" Text="{Binding Client, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="1" Style="{StaticResource Field}">
+                      <TextBlock Style="{StaticResource FieldLabel}" Text="STATUS" />
+                      <ComboBox ItemsSource="{Binding Statuses}" SelectedItem="{Binding Status}" Style="{StaticResource FieldCombo}">
+                        <ComboBox.ItemTemplate>
+                          <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                              <Ellipse Width="8" Height="8" Margin="0,0,8,0" Fill="{Binding Converter={StaticResource Palette}}" />
+                              <TextBlock Text="{Binding Converter={StaticResource DisplayName}}" />
+                            </StackPanel>
+                          </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                      </ComboBox>
+                    </StackPanel>
+                    <StackPanel Grid.Row="1" Grid.Column="2" Style="{StaticResource Field}">
+                      <DockPanel Margin="0,0,0,6">
+                        <TextBlock DockPanel.Dock="Right" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Text="{Binding Progress, StringFormat={}{0}%}" />
+                        <TextBlock Margin="0" Style="{StaticResource FieldLabel}" Text="PROGRESS" />
+                      </DockPanel>
+                      <Slider Margin="0,7,0,0" Style="{StaticResource ScoreSlider}" Value="{Binding Progress, ValidatesOnNotifyDataErrors=True}" Validation.ErrorTemplate="{StaticResource FieldErrorTemplate}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="2" Style="{StaticResource Field}">
+                      <TextBlock Style="{StaticResource FieldLabel}" Text="START DATE" />
+                      <DatePicker SelectedDate="{Binding StartDate}" Style="{StaticResource FieldDatePicker}" />
+                    </StackPanel>
+                    <StackPanel Grid.Row="2" Grid.Column="2" Style="{StaticResource Field}">
+                      <TextBlock Style="{StaticResource FieldLabel}" Text="END DATE" />
+                      <DatePicker SelectedDate="{Binding EndDate}" Style="{StaticResource FieldDatePicker}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="3" Style="{StaticResource Field}">
+                      <TextBlock Style="{StaticResource FieldLabel}" Text="BUDGET, USD" />
+                      <TextBox Style="{StaticResource InputBox}" Tag="0 if none" Text="{Binding Budget, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+                    <StackPanel Grid.Row="3" Grid.Column="2" Style="{StaticResource Field}">
+                      <TextBlock Style="{StaticResource FieldLabel}" Text="SPENT SO FAR, USD" />
+                      <TextBox Style="{StaticResource InputBox}" Tag="0" Text="{Binding Spent, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+                  </Grid>
+
+                  <TextBlock Style="{StaticResource FieldLabel}" Text="DESCRIPTION" />
+                  <TextBox Height="72"
+                           Style="{StaticResource MultilineBox}"
+                           Tag="Goals, scope, notes…"
+                           Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+              </Border>
+
+              <StackPanel Grid.Column="2">
+                <!-- Health -->
+                <Border Margin="0,0,0,16" Style="{StaticResource Card}" Visibility="{Binding Insight, Converter={StaticResource VisibleWhen}}">
+                  <StackPanel>
+                    <DockPanel Margin="0,0,0,14">
+                      <Border Background="{Binding Insight.Health, Converter={StaticResource Palette}, ConverterParameter=Soft}" DockPanel.Dock="Right" Style="{StaticResource Pill}">
+                        <TextBlock Foreground="{Binding Insight.Health, Converter={StaticResource Palette}}" Style="{StaticResource PillText}" Text="{Binding Insight.HealthText}" />
+                      </Border>
+                      <TextBlock Margin="0" Style="{StaticResource SectionTitle}" Text="Health" />
+                    </DockPanel>
+
+                    <DockPanel Margin="0,0,0,5">
+                      <TextBlock DockPanel.Dock="Right" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Text="{Binding Insight.ScheduleElapsed, StringFormat={}{0:P0}}" />
+                      <TextBlock Style="{StaticResource MutedText}" Text="Time elapsed" />
+                    </DockPanel>
+                    <ProgressBar Margin="0,0,0,12" Foreground="#94A3B8" Maximum="1" Style="{StaticResource ProgressMeter}" Value="{Binding Insight.ScheduleElapsed, Mode=OneWay}" />
+
+                    <DockPanel Margin="0,0,0,5">
+                      <TextBlock DockPanel.Dock="Right" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Text="{Binding Progress, StringFormat={}{0}%}" />
+                      <TextBlock Style="{StaticResource MutedText}" Text="Work done" />
+                    </DockPanel>
+                    <ProgressBar Margin="0,0,0,12" Maximum="100" Style="{StaticResource ProgressMeter}" Value="{Binding Progress, Mode=OneWay}" />
+
+                    <DockPanel Margin="0,0,0,5">
+                      <TextBlock DockPanel.Dock="Right" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Text="{Binding Insight.BudgetUsed, StringFormat={}{0:P0}}" />
+                      <TextBlock Style="{StaticResource MutedText}" Text="Budget used" />
+                    </DockPanel>
+                    <ProgressBar Margin="0,0,0,14"
+                                 Foreground="{Binding Insight.Health, Converter={StaticResource Palette}}"
+                                 Maximum="1"
+                                 Style="{StaticResource ProgressMeter}"
+                                 Value="{Binding Insight.BudgetUsed, Mode=OneWay}" />
+
+                    <UniformGrid Columns="2">
+                      <StackPanel>
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="DEADLINE" />
+                        <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Text="{Binding Insight.DaysLeftText}" />
+                      </StackPanel>
+                      <StackPanel>
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="BUDGET LEFT" />
+                        <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Text="{Binding Insight.BudgetRemaining, StringFormat='{}${0:#,0;-$#,0}'}" />
+                      </StackPanel>
+                    </UniformGrid>
+                  </StackPanel>
+                </Border>
+
+                <!-- Team -->
+                <Border Style="{StaticResource Card}">
+                  <StackPanel>
+                    <DockPanel Margin="0,0,0,10">
+                      <TextBlock DockPanel.Dock="Right" Style="{StaticResource MutedText}">
+                        <Run FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Text="{Binding TeamMonthlyCost, Mode=OneWay, StringFormat='{}${0:#,0}'}" />
+                        <Run Text="/ month" />
+                      </TextBlock>
+                      <TextBlock Style="{StaticResource SectionTitle}" Margin="0">
+                        <Run Text="Team" />
+                        <Run Foreground="{StaticResource MutedTextBrush}" Text="{Binding TeamSize, Mode=OneWay}" />
+                      </TextBlock>
+                    </DockPanel>
+                    <ScrollViewer Height="300" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                      <ItemsControl ItemsSource="{Binding TeamOptions}">
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate DataType="{x:Type vm:TeamMemberOption}">
+                            <CheckBox Margin="0,0,6,0" Padding="10,6,0,6" IsChecked="{Binding IsSelected}" Style="{StaticResource CheckBoxBase}">
+                              <Grid>
+                                <Grid.ColumnDefinitions>
+                                  <ColumnDefinition Width="Auto" />
+                                  <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Width="30" Height="30" Background="{Binding AvatarIndex, Converter={StaticResource Palette}}" CornerRadius="15">
+                                  <TextBlock FontSize="11" Style="{StaticResource AvatarText}" Text="{Binding Initials}" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+                                  <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Text="{Binding FullName}" />
+                                  <TextBlock Style="{StaticResource MutedText}" Text="{Binding PositionName}" />
+                                </StackPanel>
+                              </Grid>
+                            </CheckBox>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
+                    </ScrollViewer>
+                  </StackPanel>
+                </Border>
+              </StackPanel>
+            </Grid>
+          </StackPanel>
+        </ScrollViewer>
+      </DockPanel>
+    </Grid>
+  </Grid>
+</UserControl>

@@ -1,0 +1,258 @@
+<UserControl x:Class="SimpleErp.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:charts="clr-namespace:SimpleErp.Charts"
+             xmlns:services="clr-namespace:SimpleErp.Core.Services;assembly=SimpleErp.Core"
+             xmlns:vm="clr-namespace:SimpleErp.Core.ViewModels;assembly=SimpleErp.Core"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:DashboardViewModel}"
+             d:DesignHeight="760"
+             d:DesignWidth="1140">
+
+  <UserControl.Resources>
+    <!-- Same order and colors as the project status pills: planned, active, on hold, completed. -->
+    <x:Array x:Key="StatusPalette" Type="Brush">
+      <SolidColorBrush Color="#3B82F6" />
+      <SolidColorBrush Color="#10B981" />
+      <SolidColorBrush Color="#F59E0B" />
+      <SolidColorBrush Color="#6366F1" />
+    </x:Array>
+  </UserControl.Resources>
+
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+    <Grid Margin="28,24,28,28">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+      </Grid.RowDefinitions>
+
+      <!-- ============================== Key figures ============================== -->
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="16" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="16" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="16" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Border Style="{StaticResource Card}">
+          <DockPanel>
+            <Border Background="{StaticResource AccentSoftBrush}" DockPanel.Dock="Right" Style="{StaticResource StatIcon}">
+              <Path Data="{StaticResource Icon.People}" Fill="{StaticResource AccentBrush}" Style="{StaticResource Icon}" />
+            </Border>
+            <StackPanel>
+              <TextBlock Style="{StaticResource FieldLabel}" Text="HEADCOUNT" />
+              <TextBlock Style="{StaticResource StatValue}" Text="{Binding Summary.Headcount}" />
+              <TextBlock Style="{StaticResource MutedText}" Text="{Binding Summary.AverageSalary, StringFormat='{}avg. salary ${0:#,0} / month'}" />
+            </StackPanel>
+          </DockPanel>
+        </Border>
+
+        <Border Grid.Column="2" Style="{StaticResource Card}">
+          <DockPanel>
+            <Border Background="{StaticResource SuccessSoftBrush}" DockPanel.Dock="Right" Style="{StaticResource StatIcon}">
+              <Path Data="{StaticResource Icon.Money}" Fill="{StaticResource SuccessBrush}" Style="{StaticResource Icon}" />
+            </Border>
+            <StackPanel>
+              <TextBlock Style="{StaticResource FieldLabel}" Text="MONTHLY PAYROLL" />
+              <TextBlock Style="{StaticResource StatValue}" Text="{Binding Summary.MonthlyPayroll, StringFormat='{}${0:#,0}'}" />
+              <TextBlock Style="{StaticResource MutedText}" Text="salaries of all employees" />
+            </StackPanel>
+          </DockPanel>
+        </Border>
+
+        <Border Grid.Column="4" Style="{StaticResource Card}">
+          <DockPanel>
+            <Border Background="{StaticResource WarningSoftBrush}" DockPanel.Dock="Right" Style="{StaticResource StatIcon}">
+              <Path Data="{StaticResource Icon.Briefcase}" Fill="#B45309" Style="{StaticResource Icon}" />
+            </Border>
+            <StackPanel>
+              <TextBlock Style="{StaticResource FieldLabel}" Text="ACTIVE PROJECTS" />
+              <TextBlock Style="{StaticResource StatValue}" Text="{Binding Summary.ActiveProjects}" />
+              <TextBlock Style="{StaticResource MutedText}">
+                <Run FontWeight="SemiBold" Foreground="{StaticResource DangerBrush}" Text="{Binding Summary.ProjectsNeedingAttention, Mode=OneWay}" />
+                <Run Text="need attention" />
+              </TextBlock>
+            </StackPanel>
+          </DockPanel>
+        </Border>
+
+        <Border Grid.Column="6" Style="{StaticResource Card}">
+          <DockPanel>
+            <Border Background="#FCE7F3" DockPanel.Dock="Right" Style="{StaticResource StatIcon}">
+              <Path Data="{StaticResource Icon.Trophy}" Fill="#BE185D" Style="{StaticResource Icon}" />
+            </Border>
+            <StackPanel>
+              <TextBlock Style="{StaticResource FieldLabel}" Text="AVERAGE KPI SCORE" />
+              <TextBlock Style="{StaticResource StatValue}" Text="{Binding Summary.AverageKpi, StringFormat={}{0:0.0}}" />
+              <TextBlock Style="{StaticResource MutedText}" Text="weighted, out of 100" />
+            </StackPanel>
+          </DockPanel>
+        </Border>
+      </Grid>
+
+      <!-- ============================== Charts ============================== -->
+      <Grid Grid.Row="1" Margin="0,16,0,0">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="1.15*" />
+          <ColumnDefinition Width="16" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="16" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Border Style="{StaticResource Card}">
+          <DockPanel>
+            <TextBlock DockPanel.Dock="Top" Style="{StaticResource SectionTitle}" Text="Team performance" />
+            <TextBlock Margin="0,-8,0,4" DockPanel.Dock="Top" Style="{StaticResource MutedText}" Text="Average score of each indicator" />
+            <charts:RadarChart Height="230"
+                               Fill="{StaticResource AccentFillBrush}"
+                               GridBrush="{StaticResource ChartGridBrush}"
+                               LabelBrush="{StaticResource MutedTextBrush}"
+                               Points="{Binding Summary.TeamKpi}"
+                               Stroke="{StaticResource AccentBrush}"
+                               ValueBrush="{StaticResource TextBrush}" />
+          </DockPanel>
+        </Border>
+
+        <Border Grid.Column="2" Style="{StaticResource Card}">
+          <DockPanel>
+            <TextBlock DockPanel.Dock="Top" Style="{StaticResource SectionTitle}" Text="Projects by status" />
+            <TextBlock Margin="0,-8,0,4" DockPanel.Dock="Top" Style="{StaticResource MutedText}" Text="The whole portfolio" />
+            <charts:DonutChart Height="200"
+                               Margin="0,16,0,0"
+                               Caption="projects"
+                               GridBrush="{StaticResource ChartTrackBrush}"
+                               LabelBrush="{StaticResource SecondaryTextBrush}"
+                               Points="{Binding Summary.ProjectsByStatus}"
+                               Thickness="18"
+                               Palette="{StaticResource StatusPalette}"
+                               ValueBrush="{StaticResource TextBrush}" />
+          </DockPanel>
+        </Border>
+
+        <Border Grid.Column="4" Style="{StaticResource Card}">
+          <DockPanel>
+            <TextBlock DockPanel.Dock="Top" Style="{StaticResource SectionTitle}" Text="Headcount by position" />
+            <TextBlock Margin="0,-8,0,12" DockPanel.Dock="Top" Style="{StaticResource MutedText}" Text="Employees per role" />
+            <charts:BarChart Height="200"
+                             BarBrush="{StaticResource AccentGradientBrush}"
+                             BarThickness="12"
+                             LabelBrush="{StaticResource SecondaryTextBrush}"
+                             LabelWidth="118"
+                             Points="{Binding Summary.HeadcountByPosition}"
+                             TrackBrush="{StaticResource ChartTrackBrush}"
+                             ValueBrush="{StaticResource TextBrush}" />
+          </DockPanel>
+        </Border>
+      </Grid>
+
+      <!-- ============================== Lists ============================== -->
+      <Grid Grid.Row="2" Margin="0,16,0,0">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="1.6*" />
+          <ColumnDefinition Width="16" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Active projects -->
+        <Border Style="{StaticResource Card}">
+          <StackPanel>
+            <DockPanel Margin="0,0,0,8">
+              <TextBlock DockPanel.Dock="Right" Style="{StaticResource MutedText}">
+                <Run Text="Budget used" />
+                <Run FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Text="{Binding Summary.ActiveBudgetUsed, Mode=OneWay, StringFormat={}{0:P0}}" />
+                <Run Text="{Binding Summary.ActiveBudget, Mode=OneWay, StringFormat='{}of ${0:#,0}'}" />
+              </TextBlock>
+              <TextBlock Margin="0" Style="{StaticResource SectionTitle}" Text="Active projects" />
+            </DockPanel>
+
+            <ItemsControl ItemsSource="{Binding Summary.ActiveProjectProgress}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type services:ProjectProgressItem}">
+                  <Border Padding="0,10" BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,1,0,0">
+                    <Grid>
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="180" />
+                        <ColumnDefinition Width="104" />
+                        <ColumnDefinition Width="104" />
+                      </Grid.ColumnDefinitions>
+                      <StackPanel VerticalAlignment="Center">
+                        <TextBlock FontSize="13.5" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Style="{StaticResource MutedText}" Text="{Binding Client}" />
+                      </StackPanel>
+                      <StackPanel Grid.Column="1" Margin="12,0" VerticalAlignment="Center">
+                        <DockPanel Margin="0,0,0,5">
+                          <TextBlock DockPanel.Dock="Right" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Text="{Binding Progress, StringFormat={}{0}%}" />
+                          <TextBlock Style="{StaticResource MutedText}" Text="Progress" />
+                        </DockPanel>
+                        <ProgressBar Maximum="100" Style="{StaticResource ProgressMeter}" Value="{Binding Progress, Mode=OneWay}" />
+                      </StackPanel>
+                      <Border Grid.Column="2"
+                              Background="{Binding Insight.Health, Converter={StaticResource Palette}, ConverterParameter=Soft}"
+                              Style="{StaticResource Pill}">
+                        <TextBlock Foreground="{Binding Insight.Health, Converter={StaticResource Palette}}" Style="{StaticResource PillText}" Text="{Binding Insight.HealthText}" />
+                      </Border>
+                      <TextBlock Grid.Column="3"
+                                 HorizontalAlignment="Right"
+                                 VerticalAlignment="Center"
+                                 Style="{StaticResource MutedText}"
+                                 Text="{Binding Insight.DaysLeftText}" />
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+
+        <!-- Top performers -->
+        <Border Grid.Column="2" Style="{StaticResource Card}">
+          <StackPanel>
+            <TextBlock Margin="0,0,0,8" Style="{StaticResource SectionTitle}" Text="Top performers" />
+            <ItemsControl ItemsSource="{Binding TopPerformers}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:EmployeeListItem}">
+                  <Border Padding="0,8" BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,1,0,0">
+                    <Grid>
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="24" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                      </Grid.ColumnDefinitions>
+                      <TextBlock VerticalAlignment="Center" FontWeight="SemiBold" Foreground="{StaticResource MutedTextBrush}" Text="{Binding Rank}" />
+                      <Border Grid.Column="1"
+                              Width="34"
+                              Height="34"
+                              Background="{Binding AvatarIndex, Converter={StaticResource Palette}}"
+                              CornerRadius="17">
+                        <TextBlock FontSize="12" Style="{StaticResource AvatarText}" Text="{Binding Initials}" />
+                      </Border>
+                      <StackPanel Grid.Column="2" Margin="10,0,0,0" VerticalAlignment="Center">
+                        <TextBlock FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Text="{Binding FullName}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Style="{StaticResource MutedText}" Text="{Binding PositionName}" />
+                      </StackPanel>
+                      <Border Grid.Column="3"
+                              Background="{Binding Score, Converter={StaticResource Palette}, ConverterParameter=Soft}"
+                              Style="{StaticResource Pill}">
+                        <TextBlock FontSize="12" Foreground="{Binding Score, Converter={StaticResource Palette}}" Style="{StaticResource PillText}" Text="{Binding Score, StringFormat={}{0:0.0}}" />
+                      </Border>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+      </Grid>
+    </Grid>
+  </ScrollViewer>
+</UserControl>

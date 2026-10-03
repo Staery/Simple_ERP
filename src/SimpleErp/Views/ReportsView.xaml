@@ -1,0 +1,169 @@
+<UserControl x:Class="SimpleErp.Views.ReportsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:SimpleErp.Core.ViewModels;assembly=SimpleErp.Core"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:ReportsViewModel}"
+             d:DesignHeight="760"
+             d:DesignWidth="1140">
+
+  <UserControl.Resources>
+    <Style x:Key="Numeric" TargetType="TextBlock">
+      <Setter Property="HorizontalAlignment" Value="Right" />
+    </Style>
+    <Style x:Key="NumericHeader" TargetType="DataGridColumnHeader" BasedOn="{StaticResource TableHeader}">
+      <Setter Property="HorizontalContentAlignment" Value="Right" />
+    </Style>
+  </UserControl.Resources>
+
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="28,24,28,28">
+
+      <!-- ============================== Totals and export ============================== -->
+      <Grid Margin="0,0,0,16">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="16" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="16" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="16" />
+          <ColumnDefinition Width="1.35*" />
+        </Grid.ColumnDefinitions>
+
+        <Border Style="{StaticResource Card}">
+          <StackPanel>
+            <TextBlock Style="{StaticResource FieldLabel}" Text="ANNUAL PAYROLL" />
+            <TextBlock Style="{StaticResource StatValue}" Text="{Binding AnnualPayroll, StringFormat='{}${0:#,0}'}" />
+            <TextBlock Style="{StaticResource MutedText}" Text="12 × current monthly salaries" />
+          </StackPanel>
+        </Border>
+
+        <Border Grid.Column="2" Style="{StaticResource Card}">
+          <StackPanel>
+            <TextBlock Style="{StaticResource FieldLabel}" Text="PORTFOLIO BUDGET" />
+            <TextBlock Style="{StaticResource StatValue}" Text="{Binding PortfolioBudget, StringFormat='{}${0:#,0}'}" />
+            <TextBlock Style="{StaticResource MutedText}" Text="all projects, any status" />
+          </StackPanel>
+        </Border>
+
+        <Border Grid.Column="4" Style="{StaticResource Card}">
+          <StackPanel>
+            <TextBlock Style="{StaticResource FieldLabel}" Text="SPENT TO DATE" />
+            <TextBlock Style="{StaticResource StatValue}" Text="{Binding PortfolioSpent, StringFormat='{}${0:#,0}'}" />
+            <TextBlock Style="{StaticResource MutedText}" Text="across the portfolio" />
+          </StackPanel>
+        </Border>
+
+        <Border Grid.Column="6" Style="{StaticResource Card}">
+          <StackPanel>
+            <TextBlock Style="{StaticResource FieldLabel}" Text="EXPORT TO CSV" />
+            <TextBlock Margin="0,0,0,12" Style="{StaticResource MutedText}" Text="Opens in Excel, LibreOffice or Google Sheets" />
+            <StackPanel Orientation="Horizontal">
+              <Button Margin="0,0,8,0" Command="{Binding ExportEmployeesCommand}" Style="{StaticResource SecondaryButton}">
+                <StackPanel Orientation="Horizontal">
+                  <Path Margin="0,0,6,0" Data="{StaticResource Icon.Download}" Style="{StaticResource Icon}" />
+                  <TextBlock Text="Employees" />
+                </StackPanel>
+              </Button>
+              <Button Margin="0,0,8,0" Command="{Binding ExportProjectsCommand}" Style="{StaticResource SecondaryButton}">
+                <StackPanel Orientation="Horizontal">
+                  <Path Margin="0,0,6,0" Data="{StaticResource Icon.Download}" Style="{StaticResource Icon}" />
+                  <TextBlock Text="Projects" />
+                </StackPanel>
+              </Button>
+              <Button Command="{Binding OpenDataFolderCommand}" Style="{StaticResource IconButton}" ToolTip="{Binding DataLocation}">
+                <Path Data="{StaticResource Icon.Folder}" Style="{StaticResource Icon}" />
+              </Button>
+            </StackPanel>
+          </StackPanel>
+        </Border>
+      </Grid>
+
+      <!-- ============================== KPI leaderboard ============================== -->
+      <Border Margin="0,0,0,16" Padding="0,18,0,0" Style="{StaticResource Card}">
+        <DockPanel>
+          <StackPanel Margin="20,0,20,12" DockPanel.Dock="Top">
+            <TextBlock Margin="0" Style="{StaticResource SectionTitle}" Text="KPI leaderboard" />
+            <TextBlock Style="{StaticResource MutedText}" Text="Equal scores share a rank. Click a column header to sort." />
+          </StackPanel>
+          <DataGrid Height="420" ItemsSource="{Binding Leaderboard}" Style="{StaticResource DataTable}">
+            <DataGrid.Columns>
+              <DataGridTextColumn Width="56" Binding="{Binding Rank, StringFormat=#{0}}" Header="RANK" SortMemberPath="Rank" />
+              <DataGridTemplateColumn Width="2*" Header="EMPLOYEE" SortMemberPath="FullName">
+                <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate DataType="{x:Type vm:LeaderboardRow}">
+                    <StackPanel>
+                      <TextBlock FontWeight="SemiBold" Text="{Binding FullName}" TextTrimming="CharacterEllipsis" />
+                      <TextBlock FontSize="11" Foreground="{StaticResource MutedTextBrush}" Text="{Binding PositionName}" />
+                    </StackPanel>
+                  </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+              </DataGridTemplateColumn>
+              <DataGridTextColumn Width="*" Binding="{Binding Kpi.Teamwork}" ElementStyle="{StaticResource Numeric}" Header="TEAMWORK" HeaderStyle="{StaticResource NumericHeader}" />
+              <DataGridTextColumn Width="*" Binding="{Binding Kpi.CodeEfficiency}" ElementStyle="{StaticResource Numeric}" Header="CODE" HeaderStyle="{StaticResource NumericHeader}" />
+              <DataGridTextColumn Width="*" Binding="{Binding Kpi.DesignSkills}" ElementStyle="{StaticResource Numeric}" Header="DESIGN" HeaderStyle="{StaticResource NumericHeader}" />
+              <DataGridTextColumn Width="*" Binding="{Binding Kpi.Leadership}" ElementStyle="{StaticResource Numeric}" Header="LEADERSHIP" HeaderStyle="{StaticResource NumericHeader}" />
+              <DataGridTextColumn Width="*" Binding="{Binding Kpi.ProjectSuccess}" ElementStyle="{StaticResource Numeric}" Header="SUCCESS" HeaderStyle="{StaticResource NumericHeader}" />
+              <DataGridTemplateColumn Width="1.4*" Header="SCORE" SortMemberPath="Score">
+                <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate DataType="{x:Type vm:LeaderboardRow}">
+                    <StackPanel Orientation="Horizontal">
+                      <Border MinWidth="44" Background="{Binding Score, Converter={StaticResource Palette}, ConverterParameter=Soft}" Style="{StaticResource Pill}">
+                        <TextBlock HorizontalAlignment="Center" Foreground="{Binding Score, Converter={StaticResource Palette}}" Style="{StaticResource PillText}" Text="{Binding Score, StringFormat={}{0:0.0}}" />
+                      </Border>
+                      <TextBlock Margin="8,0,0,0" VerticalAlignment="Center" FontSize="12" Foreground="{StaticResource MutedTextBrush}" Text="{Binding Grade}" />
+                    </StackPanel>
+                  </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+              </DataGridTemplateColumn>
+            </DataGrid.Columns>
+          </DataGrid>
+        </DockPanel>
+      </Border>
+
+      <!-- ============================== Project portfolio ============================== -->
+      <Border Padding="0,18,0,0" Style="{StaticResource Card}">
+        <DockPanel>
+          <StackPanel Margin="20,0,20,12" DockPanel.Dock="Top">
+            <TextBlock Margin="0" Style="{StaticResource SectionTitle}" Text="Project portfolio" />
+            <TextBlock Style="{StaticResource MutedText}" Text="Schedule, budget and team cost of every project" />
+          </StackPanel>
+          <DataGrid ItemsSource="{Binding Portfolio}" PreviewMouseWheel="OnPortfolioMouseWheel" Style="{StaticResource DataTable}">
+            <DataGrid.Columns>
+              <DataGridTemplateColumn Width="2*" Header="PROJECT" SortMemberPath="Name">
+                <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate DataType="{x:Type vm:PortfolioRow}">
+                    <StackPanel>
+                      <TextBlock FontWeight="SemiBold" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                      <TextBlock FontSize="11" Foreground="{StaticResource MutedTextBrush}" Text="{Binding Client}" />
+                    </StackPanel>
+                  </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+              </DataGridTemplateColumn>
+              <DataGridTextColumn Width="1.05*" Binding="{Binding StatusName}" Header="STATUS" />
+              <DataGridTemplateColumn Width="1.2*" Header="HEALTH" SortMemberPath="Insight.Health">
+                <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate DataType="{x:Type vm:PortfolioRow}">
+                    <Border Background="{Binding Insight.Health, Converter={StaticResource Palette}, ConverterParameter=Soft}" Style="{StaticResource Pill}">
+                      <TextBlock Foreground="{Binding Insight.Health, Converter={StaticResource Palette}}" Style="{StaticResource PillText}" Text="{Binding Insight.HealthText}" />
+                    </Border>
+                  </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+              </DataGridTemplateColumn>
+              <DataGridTextColumn Width="0.95*" Binding="{Binding Progress, StringFormat={}{0}%}" ElementStyle="{StaticResource Numeric}" Header="PROGRESS" HeaderStyle="{StaticResource NumericHeader}" SortMemberPath="Progress" />
+              <DataGridTextColumn Width="1.1*" Binding="{Binding Budget, StringFormat='{}${0:#,0}'}" ElementStyle="{StaticResource Numeric}" Header="BUDGET" HeaderStyle="{StaticResource NumericHeader}" SortMemberPath="Budget" />
+              <DataGridTextColumn Width="1.1*" Binding="{Binding Spent, StringFormat='{}${0:#,0}'}" ElementStyle="{StaticResource Numeric}" Header="SPENT" HeaderStyle="{StaticResource NumericHeader}" SortMemberPath="Spent" />
+              <DataGridTextColumn Width="0.8*" Binding="{Binding Insight.BudgetUsed, StringFormat={}{0:P0}}" ElementStyle="{StaticResource Numeric}" Header="USED" HeaderStyle="{StaticResource NumericHeader}" SortMemberPath="Insight.BudgetUsed" />
+              <DataGridTextColumn Width="0.7*" Binding="{Binding TeamSize}" ElementStyle="{StaticResource Numeric}" Header="TEAM" HeaderStyle="{StaticResource NumericHeader}" />
+              <DataGridTextColumn Width="1.3*" Binding="{Binding MonthlyTeamCost, StringFormat='{}${0:#,0}'}" ElementStyle="{StaticResource Numeric}" Header="TEAM / MONTH" HeaderStyle="{StaticResource NumericHeader}" SortMemberPath="MonthlyTeamCost" />
+              <DataGridTextColumn Width="1.25*" Binding="{Binding EndDate, StringFormat={}{0:d MMM yyyy}}" Header="ENDS" SortMemberPath="EndDate" />
+            </DataGrid.Columns>
+          </DataGrid>
+        </DockPanel>
+      </Border>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

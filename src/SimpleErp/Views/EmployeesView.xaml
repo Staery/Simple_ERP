@@ -1,0 +1,411 @@
+<UserControl x:Class="SimpleErp.Views.EmployeesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:charts="clr-namespace:SimpleErp.Charts"
+             xmlns:vm="clr-namespace:SimpleErp.Core.ViewModels;assembly=SimpleErp.Core"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:EmployeesViewModel}"
+             d:DesignHeight="760"
+             d:DesignWidth="1140">
+
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="350" />
+      <ColumnDefinition Width="*" />
+    </Grid.ColumnDefinitions>
+
+    <!-- ============================== List ============================== -->
+    <Border Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,0,1,0">
+      <DockPanel>
+        <StackPanel Margin="16,18,16,12" DockPanel.Dock="Top">
+          <DockPanel Margin="0,0,0,12">
+            <Button Command="{Binding NewCommand}"
+                    DockPanel.Dock="Right"
+                    Style="{StaticResource PrimaryButton}"
+                    ToolTip="Add an employee (Ctrl+N)">
+              <StackPanel Orientation="Horizontal">
+                <Path Margin="0,0,6,0" Data="{StaticResource Icon.PersonAdd}" Style="{StaticResource Icon}" />
+                <TextBlock Text="New" />
+              </StackPanel>
+            </Button>
+            <TextBlock VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource SecondaryTextBrush}" Text="{Binding ResultsText}" />
+          </DockPanel>
+
+          <Grid Margin="0,0,0,10">
+            <TextBox Padding="34,8,10,8"
+                     Style="{StaticResource InputBox}"
+                     Tag="Search name, email, city…"
+                     Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged, Delay=150}" />
+            <Path Margin="11,0,0,0"
+                  HorizontalAlignment="Left"
+                  Data="{StaticResource Icon.Search}"
+                  Fill="{StaticResource MutedTextBrush}"
+                  IsHitTestVisible="False"
+                  Style="{StaticResource Icon}" />
+          </Grid>
+
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="8" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <ComboBox DisplayMemberPath="Label"
+                      ItemsSource="{Binding PositionFilters}"
+                      SelectedItem="{Binding SelectedPositionFilter}"
+                      Style="{StaticResource FieldCombo}"
+                      ToolTip="Filter by position" />
+            <ComboBox Grid.Column="2"
+                      DisplayMemberPath="Label"
+                      ItemsSource="{Binding SortOptions}"
+                      SelectedItem="{Binding SelectedSort}"
+                      Style="{StaticResource FieldCombo}"
+                      ToolTip="Sort order" />
+          </Grid>
+        </StackPanel>
+
+        <Grid>
+          <ListBox ItemContainerStyle="{StaticResource CardItem}"
+                   ItemsSource="{Binding Items}"
+                   SelectedItem="{Binding SelectedItem}"
+                   Style="{StaticResource CardList}">
+            <ListBox.ItemTemplate>
+              <DataTemplate DataType="{x:Type vm:EmployeeListItem}">
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
+                  <Border Width="40"
+                          Height="40"
+                          Background="{Binding AvatarIndex, Converter={StaticResource Palette}}"
+                          CornerRadius="20">
+                    <TextBlock FontSize="13.5" Style="{StaticResource AvatarText}" Text="{Binding Initials}" />
+                  </Border>
+                  <StackPanel Grid.Column="1" Margin="12,0,8,0" VerticalAlignment="Center">
+                    <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Text="{Binding FullName}" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Style="{StaticResource MutedText}">
+                      <Run Text="{Binding PositionName, Mode=OneWay}" />
+                      <Run Text="·" />
+                      <Run Text="{Binding City, Mode=OneWay}" />
+                    </TextBlock>
+                  </StackPanel>
+                  <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                    <Border HorizontalAlignment="Right"
+                            Background="{Binding Score, Converter={StaticResource Palette}, ConverterParameter=Soft}"
+                            Style="{StaticResource Pill}"
+                            ToolTip="{Binding Grade}">
+                      <TextBlock Foreground="{Binding Score, Converter={StaticResource Palette}}" Style="{StaticResource PillText}" Text="{Binding Score, StringFormat={}{0:0.0}}" />
+                    </Border>
+                    <TextBlock Margin="0,3,2,0" HorizontalAlignment="Right" FontSize="11" Foreground="{StaticResource MutedTextBrush}" Text="{Binding Rank, StringFormat=#{0}}" />
+                  </StackPanel>
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+
+          <StackPanel Margin="24,48,24,0"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Top"
+                      Visibility="{Binding IsListEmpty, Converter={StaticResource VisibleWhen}}">
+            <Path HorizontalAlignment="Center" Data="{StaticResource Icon.Search}" Fill="{StaticResource BorderStrongBrush}" Style="{StaticResource LargeIcon}" />
+            <TextBlock Margin="0,12,0,4" HorizontalAlignment="Center" FontWeight="SemiBold" Foreground="{StaticResource SecondaryTextBrush}" Text="No employees found" />
+            <TextBlock HorizontalAlignment="Center" Style="{StaticResource MutedText}" Text="Try another search or filter." />
+          </StackPanel>
+        </Grid>
+      </DockPanel>
+    </Border>
+
+    <!-- ============================== Editor ============================== -->
+    <Grid Grid.Column="1">
+
+      <!-- Nothing selected -->
+      <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="{Binding HasEditor, Converter={StaticResource CollapsedWhen}}">
+        <Border Width="72" Height="72" HorizontalAlignment="Center" Background="{StaticResource AccentSoftBrush}" CornerRadius="20">
+          <Path HorizontalAlignment="Center" Data="{StaticResource Icon.People}" Fill="{StaticResource AccentBrush}" Style="{StaticResource LargeIcon}" />
+        </Border>
+        <TextBlock Margin="0,18,0,6" HorizontalAlignment="Center" Style="{StaticResource PageTitle}" Text="Select an employee" />
+        <TextBlock Margin="0,0,0,18" HorizontalAlignment="Center" Style="{StaticResource MutedText}" Text="Or add a new one to the team." />
+        <Button HorizontalAlignment="Center" Command="{Binding NewCommand}" Content="New employee" Style="{StaticResource PrimaryButton}" />
+      </StackPanel>
+
+      <DockPanel Visibility="{Binding HasEditor, Converter={StaticResource VisibleWhen}}">
+
+        <!-- Toolbar -->
+        <Border Padding="24,14"
+                Background="{StaticResource CardBrush}"
+                BorderBrush="{StaticResource DividerBrush}"
+                BorderThickness="0,0,0,1"
+                DockPanel.Dock="Top">
+          <DockPanel>
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+              <Button Margin="0,0,16,0" Command="{Binding DeleteCommand}" Style="{StaticResource DangerButton}" ToolTip="Delete employee">
+                <Path Data="{StaticResource Icon.Delete}" Style="{StaticResource Icon}" />
+              </Button>
+              <Button Margin="0,0,8,0" Command="{Binding RevertCommand}" Style="{StaticResource SecondaryButton}" ToolTip="Discard unsaved changes">
+                <StackPanel Orientation="Horizontal">
+                  <Path Margin="0,0,6,0" Data="{StaticResource Icon.Undo}" Style="{StaticResource Icon}" />
+                  <TextBlock Text="Discard" />
+                </StackPanel>
+              </Button>
+              <Button Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButton}" ToolTip="Save (Ctrl+S)">
+                <StackPanel Orientation="Horizontal">
+                  <Path Margin="0,0,8,0" Data="{StaticResource Icon.Save}" Style="{StaticResource Icon}" />
+                  <TextBlock Text="Save" />
+                </StackPanel>
+              </Button>
+            </StackPanel>
+
+            <StackPanel DataContext="{Binding Editor}" Orientation="Horizontal">
+              <Border Width="48" Height="48" Background="{Binding AvatarIndex, Converter={StaticResource Palette}}" CornerRadius="24">
+                <TextBlock FontSize="17" Style="{StaticResource AvatarText}" Text="{Binding Initials}" />
+              </Border>
+              <StackPanel Margin="14,0,0,0" VerticalAlignment="Center">
+                <TextBlock FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Text="{Binding DisplayName}" />
+                <StackPanel Orientation="Horizontal">
+                  <TextBlock Style="{StaticResource MutedText}" Text="{Binding PositionName}" />
+                  <TextBlock Margin="6,0" Style="{StaticResource MutedText}" Text="·" />
+                  <TextBlock Style="{StaticResource MutedText}" Text="{Binding DataContext.RankText, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                  <StackPanel Margin="12,0,0,0" Orientation="Horizontal" Visibility="{Binding IsDirty, Converter={StaticResource VisibleWhen}}">
+                    <Ellipse Width="8" Height="8" Margin="0,0,6,0" Fill="{StaticResource WarningBrush}" />
+                    <TextBlock Style="{StaticResource MutedText}" Text="Unsaved changes" />
+                  </StackPanel>
+                </StackPanel>
+              </StackPanel>
+            </StackPanel>
+          </DockPanel>
+        </Border>
+
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+          <StackPanel Margin="24,18,24,24" DataContext="{Binding Editor}">
+
+            <!-- Validation summary -->
+            <Border Margin="0,0,0,16"
+                    Padding="12,8"
+                    Background="{StaticResource DangerSoftBrush}"
+                    BorderBrush="{StaticResource DangerBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Visibility="{Binding ErrorSummary, Converter={StaticResource VisibleWhen}}">
+              <StackPanel Orientation="Horizontal">
+                <Path Margin="0,0,8,0" Data="{StaticResource Icon.Error}" Fill="{StaticResource DangerBrush}" Style="{StaticResource Icon}" />
+                <TextBlock VerticalAlignment="Center" FontSize="12.5" Foreground="{StaticResource DangerBrush}" Text="{Binding ErrorSummary}" TextWrapping="Wrap" />
+              </StackPanel>
+            </Border>
+
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+
+              <!-- Profile -->
+              <Border Style="{StaticResource Card}">
+                <StackPanel>
+                  <TextBlock Style="{StaticResource SectionTitle}" Text="Profile" />
+                  <Grid>
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="12" />
+                      <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Style="{StaticResource Field}">
+                      <TextBlock Style="{StaticResource FieldLabel}" Text="FIRST NAME" />
+                      <TextBox Style="{StaticResource InputBox}" Text="{Binding FirstName, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Style="{StaticResource Field}">
+                      <TextBlock Style="{StaticResource FieldLabel}" Text="LAST NAME" />
+                      <TextBox Style="{StaticResource InputBox}" Text="{Binding LastName, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="1" Style="{StaticResource Field}">
+                      <TextBlock Style="{StaticResource FieldLabel}" Text="POSITION" />
+                      <ComboBox ItemsSource="{Binding Positions}" SelectedItem="{Binding Position}" Style="{StaticResource FieldCombo}">
+                        <ComboBox.ItemTemplate>
+                          <DataTemplate>
+                            <TextBlock Text="{Binding Converter={StaticResource DisplayName}}" />
+                          </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                      </ComboBox>
+                    </StackPanel>
+                    <StackPanel Grid.Row="1" Grid.Column="2" Style="{StaticResource Field}">
+                      <TextBlock Style="{StaticResource FieldLabel}" Text="MONTHLY SALARY, USD" />
+                      <TextBox Style="{StaticResource InputBox}" Tag="e.g. 6500" Text="{Binding MonthlySalary, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="2" Style="{StaticResource Field}">
+                      <TextBlock Style="{StaticResource FieldLabel}" Text="EMAIL" />
+                      <TextBox Style="{StaticResource InputBox}" Tag="name@company.com" Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+                    <StackPanel Grid.Row="2" Grid.Column="2" Style="{StaticResource Field}">
+                      <TextBlock Style="{StaticResource FieldLabel}" Text="CITY" />
+                      <TextBox Style="{StaticResource InputBox}" Text="{Binding City, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="3" Style="{StaticResource Field}">
+                      <DockPanel>
+                        <TextBlock DockPanel.Dock="Right" Style="{StaticResource MutedText}" Text="{Binding AgeText}" />
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="DATE OF BIRTH" />
+                      </DockPanel>
+                      <DatePicker SelectedDate="{Binding BirthDate}" Style="{StaticResource FieldDatePicker}" />
+                    </StackPanel>
+                    <StackPanel Grid.Row="3" Grid.Column="2" Style="{StaticResource Field}">
+                      <DockPanel>
+                        <TextBlock DockPanel.Dock="Right" Style="{StaticResource MutedText}" Text="{Binding TenureText}" />
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="HIRE DATE" />
+                      </DockPanel>
+                      <DatePicker SelectedDate="{Binding HireDate}" Style="{StaticResource FieldDatePicker}" />
+                    </StackPanel>
+                  </Grid>
+
+                  <TextBlock Margin="0,4,0,8" Style="{StaticResource FieldLabel}" Text="PROJECTS" />
+                  <ItemsControl ItemsSource="{Binding DataContext.EditorProjects, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                    <ItemsControl.ItemsPanel>
+                      <ItemsPanelTemplate>
+                        <WrapPanel />
+                      </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate DataType="{x:Type vm:EmployeeProjectItem}">
+                        <Border Margin="0,0,8,8"
+                                Padding="10,6"
+                                Background="{StaticResource SurfaceBrush}"
+                                BorderBrush="{StaticResource DividerBrush}"
+                                BorderThickness="1"
+                                CornerRadius="8">
+                          <StackPanel Orientation="Horizontal">
+                            <Ellipse Width="8" Height="8" Margin="0,0,8,0" Fill="{Binding Status, Converter={StaticResource Palette}}" ToolTip="{Binding StatusName}" />
+                            <TextBlock FontSize="12.5" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Text="{Binding Name}" />
+                          </StackPanel>
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                  <TextBlock Style="{StaticResource MutedText}"
+                             Text="Not assigned to any project yet."
+                             Visibility="{Binding DataContext.HasEditorProjects, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource CollapsedWhen}}" />
+                </StackPanel>
+              </Border>
+
+              <!-- Performance -->
+              <Border Grid.Column="2" Style="{StaticResource Card}">
+                <StackPanel>
+                  <DockPanel Margin="0,0,0,4">
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                      <TextBlock VerticalAlignment="Bottom" FontSize="28" FontWeight="Bold" Foreground="{Binding Score, Converter={StaticResource Palette}}" Text="{Binding Score, StringFormat={}{0:0.0}}" />
+                      <Border Margin="8,0,0,6"
+                              VerticalAlignment="Bottom"
+                              Background="{Binding Score, Converter={StaticResource Palette}, ConverterParameter=Soft}"
+                              Style="{StaticResource Pill}">
+                        <TextBlock Foreground="{Binding Score, Converter={StaticResource Palette}}" Style="{StaticResource PillText}" Text="{Binding Grade}" />
+                      </Border>
+                    </StackPanel>
+                    <StackPanel>
+                      <TextBlock Margin="0" Style="{StaticResource SectionTitle}" Text="Performance" />
+                      <TextBlock Style="{StaticResource MutedText}" Text="Weighted by position" />
+                    </StackPanel>
+                  </DockPanel>
+
+                  <charts:RadarChart Height="230"
+                                     Margin="0,4,0,4"
+                                     ComparisonPoints="{Binding DataContext.TeamKpi, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                     ComparisonStroke="{StaticResource ChartComparisonBrush}"
+                                     Fill="{StaticResource AccentFillBrush}"
+                                     GridBrush="{StaticResource ChartGridBrush}"
+                                     LabelBrush="{StaticResource MutedTextBrush}"
+                                     Points="{Binding KpiChart}"
+                                     Stroke="{StaticResource AccentBrush}"
+                                     ValueBrush="{StaticResource TextBrush}" />
+
+                  <StackPanel Margin="0,0,0,14" HorizontalAlignment="Center" Orientation="Horizontal">
+                    <Rectangle Width="14" Height="3" Margin="0,0,6,0" Fill="{StaticResource AccentBrush}" />
+                    <TextBlock Margin="0,0,16,0" Style="{StaticResource MutedText}" Text="This employee" />
+                    <Rectangle Width="14" Height="2" Margin="0,0,6,0" Stroke="{StaticResource ChartComparisonBrush}" StrokeDashArray="2 2" StrokeThickness="2" />
+                    <TextBlock Style="{StaticResource MutedText}" Text="Team average" />
+                  </StackPanel>
+
+                  <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="120" />
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="36" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                      <TextBlock FontSize="12.5" Foreground="{StaticResource SecondaryTextBrush}" Text="Teamwork" />
+                      <TextBlock FontSize="10.5" Foreground="{StaticResource MutedTextBrush}" Text="{Binding Weights[0].Value, StringFormat='{}weight {0}%'}" />
+                    </StackPanel>
+                    <Slider Grid.Column="1" Margin="8,0" VerticalAlignment="Center" Style="{StaticResource ScoreSlider}" Value="{Binding Teamwork}" />
+                    <TextBlock Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Text="{Binding Teamwork}" />
+                  </Grid>
+                  <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="120" />
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="36" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                      <TextBlock FontSize="12.5" Foreground="{StaticResource SecondaryTextBrush}" Text="Code efficiency" />
+                      <TextBlock FontSize="10.5" Foreground="{StaticResource MutedTextBrush}" Text="{Binding Weights[1].Value, StringFormat='{}weight {0}%'}" />
+                    </StackPanel>
+                    <Slider Grid.Column="1" Margin="8,0" VerticalAlignment="Center" Style="{StaticResource ScoreSlider}" Value="{Binding CodeEfficiency}" />
+                    <TextBlock Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Text="{Binding CodeEfficiency}" />
+                  </Grid>
+                  <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="120" />
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="36" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                      <TextBlock FontSize="12.5" Foreground="{StaticResource SecondaryTextBrush}" Text="Design skills" />
+                      <TextBlock FontSize="10.5" Foreground="{StaticResource MutedTextBrush}" Text="{Binding Weights[2].Value, StringFormat='{}weight {0}%'}" />
+                    </StackPanel>
+                    <Slider Grid.Column="1" Margin="8,0" VerticalAlignment="Center" Style="{StaticResource ScoreSlider}" Value="{Binding DesignSkills}" />
+                    <TextBlock Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Text="{Binding DesignSkills}" />
+                  </Grid>
+                  <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="120" />
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="36" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                      <TextBlock FontSize="12.5" Foreground="{StaticResource SecondaryTextBrush}" Text="Leadership" />
+                      <TextBlock FontSize="10.5" Foreground="{StaticResource MutedTextBrush}" Text="{Binding Weights[3].Value, StringFormat='{}weight {0}%'}" />
+                    </StackPanel>
+                    <Slider Grid.Column="1" Margin="8,0" VerticalAlignment="Center" Style="{StaticResource ScoreSlider}" Value="{Binding Leadership}" />
+                    <TextBlock Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Text="{Binding Leadership}" />
+                  </Grid>
+                  <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="120" />
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="36" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                      <TextBlock FontSize="12.5" Foreground="{StaticResource SecondaryTextBrush}" Text="Project success" />
+                      <TextBlock FontSize="10.5" Foreground="{StaticResource MutedTextBrush}" Text="{Binding Weights[4].Value, StringFormat='{}weight {0}%'}" />
+                    </StackPanel>
+                    <Slider Grid.Column="1" Margin="8,0" VerticalAlignment="Center" Style="{StaticResource ScoreSlider}" Value="{Binding ProjectSuccess}" />
+                    <TextBlock Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Text="{Binding ProjectSuccess}" />
+                  </Grid>
+                </StackPanel>
+              </Border>
+            </Grid>
+          </StackPanel>
+        </ScrollViewer>
+      </DockPanel>
+    </Grid>
+  </Grid>
+</UserControl>
