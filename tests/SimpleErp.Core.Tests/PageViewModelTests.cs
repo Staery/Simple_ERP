@@ -121,6 +121,9 @@ public class EmployeesViewModelTests
         first.City = "Edited";
         dialogs.UnsavedChangesDecision = UnsavedChangesDecision.Cancel;
 
+        // The view model defers undoing the selection through the synchronization context (as a list control
+        // needs); without one it undoes it at once, which keeps the test deterministic.
+        SynchronizationContext.SetSynchronizationContext(null);
         page.SelectedItem = page.Items[1];
 
         Assert.Equal(1, dialogs.SavePrompts);
@@ -336,6 +339,7 @@ public class ShellViewModelTests
 
         employees.Editor!.City = "Unsaved";
         dialogs.UnsavedChangesDecision = UnsavedChangesDecision.Cancel;
+        SynchronizationContext.SetSynchronizationContext(null);
         shell.SelectedNavigationItem = shell.NavigationItems[3];
 
         Assert.Same(employees, shell.CurrentPage);
